@@ -24,7 +24,6 @@ const themeColor = (name, fallback) => {
 // ゲストブックのページを丸ごと作る。本文は「エスケープせずに」埋め込む（これが脆弱性）
 function buildPage(comments) {
   const fg = themeColor('--foreground', '#e5e7eb');
-  const muted = themeColor('--muted-foreground', '#9ca3af');
   const primary = themeColor('--primary', '#d9f99d');
   const border = themeColor('--border', '#27272a');
   const card = themeColor('--card', '#18181b');
