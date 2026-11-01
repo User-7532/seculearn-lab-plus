@@ -45,10 +45,11 @@ function buildPage(comments) {
 <script>
 (function () {
   var send = function (kind, arg) { parent.postMessage({ xssLab: true, kind: kind, arg: String(arg) }, '*'); };
-  // 本物のダイアログは出さず、呼ばれたことをアプリに知らせる
-  window.alert = function (a) { send('alert', a); };
-  window.confirm = function (a) { send('confirm', a); return false; };
-  window.prompt = function (a) { send('prompt', a); return null; };
+  // 呼ばれたことをアプリに知らせてから、ブラウザ本物のダイアログを出す
+  var nativeAlert = window.alert, nativeConfirm = window.confirm, nativePrompt = window.prompt;
+  window.alert = function (a) { send('alert', a); return nativeAlert.call(window, a); };
+  window.confirm = function (a) { send('confirm', a); return nativeConfirm.call(window, a); };
+  window.prompt = function (a, d) { send('prompt', a); return nativePrompt.call(window, a, d); };
   try { Object.defineProperty(document, 'cookie', { get: function () { return ${JSON.stringify(FAKE_COOKIE)}; }, set: function () {} }); } catch (e) {}
   var report = function () { send('height', document.documentElement.scrollHeight); };
   window.addEventListener('load', report);
@@ -138,11 +139,12 @@ export default function XssLab() {
       )}
 
       {/* 投稿の一覧は、本物のブラウザでHTMLとして表示する。
-          アプリ本体から切り離した枠（sandbox）の中なので、ログイン情報やアプリのデータには触れない */}
+          アプリ本体から切り離した枠（sandbox）の中なので、ログイン情報やアプリのデータには触れない。
+          allow-modals で alert などの本物のダイアログだけは出せるようにしている */}
       <iframe
         ref={frameRef}
         title="ゲストブックの投稿"
-        sandbox="allow-scripts"
+        sandbox="allow-scripts allow-modals"
         srcDoc={page}
         style={{ height }}
         className="block w-full border-0 bg-transparent"
