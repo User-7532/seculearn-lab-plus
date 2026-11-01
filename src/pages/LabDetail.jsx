@@ -1,5 +1,7 @@
-import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Check, Clock, Target } from 'lucide-react';
+import { useState } from 'react';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { ArrowLeft, ArrowRight, BookOpen, Check, Clock, RotateCcw, Target } from 'lucide-react';
+import { recordReview } from '@/lib/srs';
 import { findLab, LABS, difficultyClass } from '@/lib/labs';
 import { cn } from '@/lib/utils';
 import useLabProgress from '@/hooks/useLabProgress';
@@ -21,8 +23,10 @@ const XP = { 初級: 100, 中級: 150 };
 
 export default function LabDetail() {
   const { slug } = useParams();
+  const [params] = useSearchParams();
   const lab = findLab(slug);
   const { record, loading, save } = useLabProgress(slug || '');
+  const [reviewResult, setReviewResult] = useState(null);
 
   if (!lab) {
     return (
@@ -41,6 +45,12 @@ export default function LabDetail() {
   const index = LABS.findIndex((l) => l.slug === lab.slug);
   const next = LABS[index + 1];
 
+  // 復習の日に開いたときは、クリア済みでももう一度フラグを取り直す
+  const reviewing = params.get('review') === '1' && cleared;
+
+  const scheduleReview = (correct) =>
+    recordReview({ item_type: 'lab', item_id: lab.slug, title: lab.title, topic: lab.slug, correct }).catch(() => {});
+
   const handleAttempt = async (value) => {
     const attempts = (record?.attempts || 0) + 1;
     if (value === lab.flag) {
@@ -50,10 +60,26 @@ export default function LabDetail() {
         cleared_at: new Date().toISOString(),
         xp: cleared ? record?.xp || 0 : XP[lab.difficulty],
       });
+      // はじめてクリアしたら、忘れかけたころにもう一度出す
+      if (!cleared) scheduleReview(true);
       return true;
     }
     await save({ attempts });
     return false;
+  };
+
+  const handleReviewAttempt = async (value) => {
+    const ok = value === lab.flag;
+    if (ok) {
+      await scheduleReview(true);
+      setReviewResult('ok');
+    }
+    return ok;
+  };
+
+  const giveUpReview = async () => {
+    await scheduleReview(false);
+    setReviewResult('wrong');
   };
 
   return (
@@ -98,14 +124,55 @@ export default function LabDetail() {
             </div>
           </div>
 
+          {!loading && reviewing && (
+            <div className="rounded-xl border border-accent/40 bg-accent/[0.07] p-4">
+              <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.16em] text-accent">
+                <RotateCcw className="h-3.5 w-3.5" /> review
+              </div>
+              <p className="mt-2 text-xs leading-relaxed text-foreground/85">
+                復習の日です。ヒントを見ずに、もう一度フラグを取れるか試しましょう。取れたら次の復習までの間隔が伸びます。
+              </p>
+              {reviewResult === 'wrong' && (
+                <p className="mt-2 text-[11px] leading-relaxed text-destructive">明日もう一度出します。下のヒントで手順を確かめておきましょう。</p>
+              )}
+            </div>
+          )}
+
           {!loading && (
             <>
-              <HintPanel
-                hints={lab.hints}
-                used={record?.hints_used || 0}
-                onReveal={(n) => save({ hints_used: n })}
-              />
-              <FlagSubmit cleared={cleared} onAttempt={handleAttempt} />
+              {(!reviewing || reviewResult === 'wrong') && (
+                <HintPanel
+                  hints={lab.hints}
+                  used={record?.hints_used || 0}
+                  onReveal={(n) => save({ hints_used: Math.max(n, record?.hints_used || 0) })}
+                />
+              )}
+              {reviewing ? (
+                reviewResult === 'ok' ? (
+                  <FlagSubmit cleared onAttempt={handleReviewAttempt} />
+                ) : (
+                  <>
+                    <FlagSubmit key="review" cleared={false} onAttempt={handleReviewAttempt} />
+                    {reviewResult === null && (
+                      <button
+                        type="button"
+                        onClick={giveUpReview}
+                        className="w-full rounded-lg border border-border py-2 font-mono text-[10px] text-muted-foreground transition-colors hover:text-foreground"
+                      >
+                        思い出せない（明日また出す）
+                      </button>
+                    )}
+                  </>
+                )
+              ) : (
+                <FlagSubmit cleared={cleared} onAttempt={handleAttempt} />
+              )}
+              <Link
+                to={`/cards?topic=${lab.slug}`}
+                className="flex items-center justify-center gap-1.5 rounded-xl border border-border bg-card/60 px-4 py-3 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
+              >
+                <BookOpen className="h-3.5 w-3.5" /> この脆弱性を言葉で確かめる
+              </Link>
             </>
           )}
         </div>
