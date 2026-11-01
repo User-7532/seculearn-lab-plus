@@ -70,10 +70,9 @@ export default function LabDetail() {
 
   const handleReviewAttempt = async (value) => {
     const ok = value === lab.flag;
-    if (ok) {
-      await scheduleReview(true);
-      setReviewResult('ok');
-    }
+    // 「思い出せない」を選んだあとは、ヒントを見て取り直しても間隔は伸ばさない
+    if (ok && reviewResult !== 'wrong') await scheduleReview(true);
+    if (ok) setReviewResult('ok');
     return ok;
   };
 
