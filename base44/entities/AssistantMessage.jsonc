@@ -5,6 +5,10 @@
       "description": "\u767a\u8a00\u5185\u5bb9",
       "type": "string"
     },
+    "quote": {
+      "description": "\u753b\u9762\u3067\u9078\u3093\u3067\u8cea\u554f\u3057\u305f\u6587\u7ae0\uff08\u5f15\u7528\uff09",
+      "type": "string"
+    },
     "role": {
       "description": "\u767a\u8a00\u8005",
       "enum": [
@@ -18,6 +22,7 @@
     "role",
     "content"
   ],
+  "type": "object",
   "rls": {
     "create": {
       "created_by_id": "{{user.id}}"
@@ -31,6 +36,5 @@
     "update": {
       "created_by_id": "{{user.id}}"
     }
-  },
-  "type": "object"
+  }
 }
