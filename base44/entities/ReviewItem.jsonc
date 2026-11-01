@@ -1,0 +1,60 @@
+{
+  "name": "ReviewItem",
+  "properties": {
+    "due_date": {
+      "description": "YYYY-MM-DD",
+      "type": "string"
+    },
+    "interval_days": {
+      "type": "number"
+    },
+    "item_id": {
+      "description": "lab\u306a\u3089slug\u3001card\u306a\u3089KnowledgeCard\u306eID",
+      "type": "string"
+    },
+    "item_type": {
+      "enum": [
+        "lab",
+        "card"
+      ],
+      "type": "string"
+    },
+    "last_result": {
+      "enum": [
+        "correct",
+        "wrong"
+      ],
+      "type": "string"
+    },
+    "streak": {
+      "description": "\u9023\u7d9a\u6b63\u89e3\u6570",
+      "type": "number"
+    },
+    "title": {
+      "type": "string"
+    },
+    "topic": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "item_type",
+    "item_id",
+    "due_date"
+  ],
+  "rls": {
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    },
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    }
+  },
+  "type": "object"
+}

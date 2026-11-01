@@ -1,0 +1,63 @@
+{
+  "name": "KnowledgeCard",
+  "properties": {
+    "answer": {
+      "description": "\u7a7a\u6240\u306b\u5165\u308b\u8a9e\u53e5\uff08\u8a18\u8ff0\u3067\u306f\u8981\u70b9\uff09",
+      "type": "string"
+    },
+    "difficulty": {
+      "default": "basic",
+      "enum": [
+        "basic",
+        "intermediate",
+        "advanced"
+      ],
+      "type": "string"
+    },
+    "explanation": {
+      "description": "\u89e3\u8aac",
+      "type": "string"
+    },
+    "kind": {
+      "default": "cloze",
+      "description": "cloze=\u7a74\u57cb\u3081 written=\u8a18\u8ff0",
+      "enum": [
+        "cloze",
+        "written"
+      ],
+      "type": "string"
+    },
+    "model_answer": {
+      "description": "\u8a18\u8ff0\u306e\u6a21\u7bc4\u89e3\u7b54",
+      "type": "string"
+    },
+    "text": {
+      "description": "\u7a74\u57cb\u3081\u306e\u6587\u7ae0\uff08\u7a7a\u6240\u306f ___\uff09\u307e\u305f\u306f\u8a18\u8ff0\u306e\u554f\u3044",
+      "type": "string"
+    },
+    "topic": {
+      "description": "\u5206\u91ce\u3002\u30e9\u30dc\u306eslug\uff08sql-injection \u306a\u3069\uff09\u304b basics",
+      "type": "string"
+    }
+  },
+  "required": [
+    "topic",
+    "text",
+    "answer"
+  ],
+  "rls": {
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    },
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    }
+  },
+  "type": "object"
+}
