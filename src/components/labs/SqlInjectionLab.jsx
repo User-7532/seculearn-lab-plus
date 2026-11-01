@@ -14,7 +14,7 @@ INSERT INTO customers (id, name, email, plan, hidden) VALUES
   (3, '高橋 涼', 'ryo.t@acme.co.jp', 'Pro', 0),
   (4, '田中 由紀', 'yuki.t@acme.co.jp', 'Basic', 0),
   (5, '伊藤 大輔', 'd.ito@acme.co.jp', 'Pro', 0),
-  (99, '[RESTRICTED] internal_admin', 'root@acme.internal', 'ADMIN', 1);
+  (99, '[RESTRICTED] internal_admin', 'root@acme.internal', '${FLAG}', 1);
 CREATE TABLE secrets (id INTEGER PRIMARY KEY, name TEXT, value TEXT);
 INSERT INTO secrets (name, value) VALUES ('flag', '${FLAG}'), ('admin_note', '顧客データの持ち出し禁止');
 `;
