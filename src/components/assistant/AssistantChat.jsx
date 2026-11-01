@@ -33,7 +33,7 @@ const visibleContext = () => {
   return text.slice(0, 1500);
 };
 
-const toMessage = (m) => ({ id: m.id, role: m.role, content: m.content, created_date: m.created_date });
+const toMessage = (m) => ({ id: m.id, role: m.role, content: m.content, quote: m.quote || '', created_date: m.created_date });
 
 // 古い順に並べる。質問と返事は同じ時刻で保存されるので、同時刻はIDの順（質問が先）にする
 const byTime = (a, b) =>
@@ -74,14 +74,28 @@ export default function AssistantChat() {
     }
   };
 
+  // 画面で選んだ文章を受け取り、引用つきの質問として開く
+  useEffect(
+    () =>
+      onAskSelection((text) => {
+        setQuote(text);
+        setOpen(true);
+      }),
+    []
+  );
+
   const send = async (raw) => {
     const text = String(raw || '').trim();
     if (!text || busy) return;
+    const currentQuote = quote;
+    setOpen(true);
     setBusy(true);
-    setMessages((prev) => [...(prev || []), { id: `u-${Date.now()}`, role: 'user', content: text }]);
+    setQuote('');
+    setMessages((prev) => [...(prev || []), { id: `u-${Date.now()}`, role: 'user', content: text, quote: currentQuote }]);
     try {
       const res = await base44.functions.invoke('labAssistant', {
         message: text,
+        quote: currentQuote,
         page: pageLabelOf(pathname),
         path: pathname,
         context: visibleContext(),
@@ -109,6 +123,8 @@ export default function AssistantChat() {
             onSend={send}
             onClose={() => setOpen(false)}
             onLoadFrom={loadFrom}
+            quote={quote}
+            onClearQuote={() => setQuote('')}
             dragProps={drag.dragProps}
             dragging={drag.dragging}
           />

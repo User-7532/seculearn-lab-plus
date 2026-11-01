@@ -3,6 +3,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { LogOut, Terminal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import AssistantChat from '@/components/assistant/AssistantChat';
+import SelectionAsk from '@/components/assistant/SelectionAsk';
 
 const NAV = [
   { to: '/', label: 'ラボ', match: (p) => p === '/' || p.startsWith('/lab/') },
@@ -70,6 +71,7 @@ export default function Layout() {
       </main>
 
       <AssistantChat />
+      <SelectionAsk />
 
       <footer className="mx-auto w-full max-w-6xl px-5 py-10">
         <p className="font-mono text-[11px] leading-relaxed text-muted-foreground">
