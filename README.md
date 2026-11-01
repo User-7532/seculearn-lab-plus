@@ -1,62 +1,61 @@
-# Base44 Project
+# SecuLearn Lab+
 
-Use this repository to run and edit the app locally, then publish changes back through Base44.
+初心者向けのペネトレーションテスト演習アプリ「SecuLearn Lab（NULLLAB）」に、
+コーディング練習アプリ「CodeMaster AI」の学習機能を組み合わせた版です。
 
-Any change pushed to the repo will also be reflected in the Base44 Builder.
+ブラウザ内の模擬システムで脆弱性を **手で体験** し、その仕組みと対策を **言葉で説明できるか確かめ**、
+忘れかけたころに **もう一度出し直す** ところまでを、1つのアプリで回せるようにしています。
 
-## Prerequisites
+> 演習環境はすべてブラウザ内の模擬システムです。実在する Web サイトやサーバーへの攻撃は行いません。
 
-1. Clone the repository using the project's Git URL.
-2. Navigate to the project directory.
-3. Install dependencies: `npm install`.
-4. Install the Base44 CLI: `npm install -g base44@latest`.
-5. Install [Deno](https://docs.deno.com/runtime/getting_started/installation/) — the local Base44 backend runs on it.
+## 機能
 
-Run `base44 --help` (or see the [CLI reference](https://docs.base44.com/developers/references/cli/commands/introduction)) for the full command surface.
+| 画面 | 内容 | 由来 |
+| --- | --- | --- |
+| ラボ | SQLインジェクション / 格納型XSS / IDOR / ディレクトリトラバーサルの4つの模擬ラボ。3段階ヒントとフラグ提出 | SecuLearn Lab |
+| 記録 | ラボごとの提出回数・ヒント使用数・獲得XP | SecuLearn Lab |
+| カード | ラボの脆弱性とセキュリティ基礎の知識カード。穴埋めは自己採点、記述はAIが採点 | CodeMaster AI から移植 |
+| 復習 | クリアしたラボと解いたカードを、1日・3日・7日…の間隔で出し直す（間隔反復） | CodeMaster AI から移植 |
+| 分析 | 分野ごとのカード正答率、ラボのヒント・提出回数、直近14日の推移 | CodeMaster AI から移植 |
+| アシスタント | 画面の内容と学習記録を踏まえて答えるチャット。過去の会話の検索つき | CodeMaster AI から移植 |
 
-## Run Locally
+## 設計で気をつけたこと
 
-Three commands, from the project root:
+- **アシスタントはラボの答えを言わない**
+  フラグの文字列や、まだクリアしていないラボでそのまま通る入力は答えず、何を観察すればよいかを段階的に示します。
+  画面の抜粋をAIに渡す前に `FLAG{...}` を伏せ字にしています（`base44/functions/labAssistant`）。
+  実在のサービスへの攻撃手順や、検知を回避する方法も案内しません。
+- **カードの答えが問題文に出ないようにする**
+  AIが作ったカードは、答えの語句（略称・正式名称・その一部）が問題文に含まれていないかを保存前に機械的に確かめ、
+  含まれていれば捨てます（`base44/functions/generateSecurityCards`）。
+- **守る側の視点で問う**
+  カードは、脆弱性が成立する条件・被害・見つけ方・根本的な対策（プレースホルダ、出力時のエスケープ、サーバー側の認可、パスの正規化と許可リスト）を問います。
+  記述の採点では、入力値チェックだけのような表面的な対策は不正解にします。
+- **ラボの復習**
+  復習の日にラボを開くと、クリア済みでもヒントなしでフラグを取り直します。取れたら間隔が伸び、「思い出せない」を選ぶと翌日に戻ります。
+- **データのアクセス制限**
+  すべてのデータ（ラボの進捗・カード・解答記録・復習予定・会話）に、作成した本人だけが読み書きできる行レベルのアクセス制限（RLS）をかけています（`base44/entities/*.jsonc`）。
+
+## 技術構成
+
+- **フロントエンド**: React + Vite、Tailwind CSS、shadcn/ui、Recharts
+- **バックエンド / BaaS**: [Base44](https://base44.com)（認証、データベース、サーバーレス関数、LLM連携）
+- **サーバーレス関数**（`base44/functions/`）
+  - `generateSecurityCards` 知識カードの生成（答え漏れのチェックつき）
+  - `judgeSecurityAnswer` 記述カードの採点
+  - `labAssistant` 学習アシスタント
+
+## 開発について
+
+Base44 の AI ビルダーで作った SecuLearn Lab に、Claude を使って CodeMaster AI の学習機能を移植しました。
+移植では、画面の見た目（暗いテーマ・等幅フォントの見出し）を SecuLearn Lab 側に合わせて作り直しています。
+
+## ローカルで動かす
 
 ```bash
-base44 login   # one-time per machine
-base44 link    # one-time per clone
-base44 dev     # local backend + frontend together
+npm install
+npm install -g base44@latest
+base44 login   # 初回のみ
+base44 link    # クローンごとに1回
+base44 dev     # ローカルのバックエンドとフロントエンドを同時に起動
 ```
-
-Open the frontend URL that `base44 dev` prints (typically `http://localhost:5173`).
-
-Notes:
-
-- **Every fresh clone needs `base44 link`.** It writes `base44/.app.jsonc` (the app-id pointer), which is deliberately gitignored. Your app id is in the Builder URL (`app.base44.com/apps/<id>/...`); `base44 link --help` shows the non-interactive flags.
-- **`base44 dev` runs the frontend for you** (via `site.serveCommand` in this repo's `base44/config.jsonc`) — never run `npm run dev` yourself: alone it serves a UI with no backend behind it (`[base44] Proxy not enabled`, every `/api` call fails), and alongside `base44 dev` the second Vite silently takes the next port and you end up looking at the wrong one.
-- **The app must be published at least once for the UI to load under `base44 dev`.** The frontend boots by fetching app settings from the hosted app; before the first publish that fails and every page redirects to login. The local API works regardless.
-- Entities, functions, and auth run locally — entity data is **in-memory only**, wiped when `base44 dev` restarts. Everything else (Core integrations, OAuth login) is forwarded to your deployed app. Full breakdown: [Local development overview](https://docs.base44.com/developers/backend/overview/local-dev/local-development-overview).
-
-## Frontend Only, Hosted Backend
-
-To work on just the frontend against your app's live hosted backend:
-
-```bash
-base44 dev --remote
-```
-
-⚠️ In this mode writes go to your app's **production data** — plain `base44 dev` keeps everything local.
-
-## Publish Your Changes
-
-After pushing your changes to git, open the Base44 dashboard and publish the app:
-
-```bash
-base44 dashboard open
-```
-
-This repo syncs to Base44 through git, so publish from the dashboard rather than `base44 deploy` — a CLI deploy ships your local tree directly, bypassing the sync, and the deployed state silently diverges from the repo.
-
-## Docs & Support
-
-GitHub integration: [https://docs.base44.com/developers/app-code/local-development/github](https://docs.base44.com/developers/app-code/local-development/github)
-
-Local development: [https://docs.base44.com/developers/backend/overview/local-dev/local-development-overview](https://docs.base44.com/developers/backend/overview/local-dev/local-development-overview)
-
-Support: [https://app.base44.com/support](https://app.base44.com/support)
