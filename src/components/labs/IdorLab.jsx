@@ -24,9 +24,11 @@ export default function IdorLab() {
 
   const record = RECEIPTS[opened];
 
+  // サーバーと同じく、id は数として読む（"03" も 3 として扱う）
   const open = (e) => {
     e.preventDefault();
-    setOpened(id.trim());
+    const raw = id.trim();
+    setOpened(/^\d+$/.test(raw) ? String(Number(raw)) : raw);
   };
 
   return (
