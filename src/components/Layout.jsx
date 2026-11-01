@@ -2,6 +2,15 @@ import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { LogOut, Terminal } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import AssistantChat from '@/components/assistant/AssistantChat';
+
+const NAV = [
+  { to: '/', label: 'ラボ', match: (p) => p === '/' || p.startsWith('/lab/') },
+  { to: '/cards', label: 'カード' },
+  { to: '/review', label: '復習' },
+  { to: '/stats', label: '分析' },
+  { to: '/progress', label: '記録' },
+];
 
 export default function Layout() {
   const { user, logout } = useAuth();
@@ -11,7 +20,7 @@ export default function Layout() {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-40 border-b border-border/70 bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-5">
-          <Link to="/" className="group flex items-center gap-2.5">
+          <Link to="/" className="group flex shrink-0 items-center gap-2.5">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-primary/40 bg-primary/10">
               <Terminal className="h-4 w-4 text-primary" />
             </span>
@@ -20,31 +29,24 @@ export default function Layout() {
             </span>
           </Link>
 
-          <nav className="flex items-center gap-1 font-mono text-[11px] uppercase tracking-[0.14em]">
-            <NavLink
-              to="/"
-              className={({ isActive }) =>
-                cn(
-                  'rounded-full px-3 py-1.5 transition-colors',
-                  isActive || location.pathname === '/'
-                    ? 'bg-secondary text-foreground'
-                    : 'text-muted-foreground hover:text-foreground'
-                )
-              }
-            >
-              ラボ
-            </NavLink>
-            <NavLink
-              to="/progress"
-              className={({ isActive }) =>
-                cn(
-                  'rounded-full px-3 py-1.5 transition-colors',
-                  isActive ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:text-foreground'
-                )
-              }
-            >
-              記録
-            </NavLink>
+          <nav className="flex min-w-0 items-center gap-0.5 overflow-x-auto font-mono text-[11px] uppercase tracking-[0.12em] sm:gap-1">
+            {NAV.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.to === '/'}
+                className={({ isActive }) =>
+                  cn(
+                    'shrink-0 rounded-full px-2.5 py-1.5 transition-colors sm:px-3',
+                    (item.match ? item.match(location.pathname) : isActive)
+                      ? 'bg-secondary text-foreground'
+                      : 'text-muted-foreground hover:text-foreground'
+                  )
+                }
+              >
+                {item.label}
+              </NavLink>
+            ))}
           </nav>
 
           <div className="flex items-center gap-3">
@@ -66,6 +68,8 @@ export default function Layout() {
       <main>
         <Outlet />
       </main>
+
+      <AssistantChat />
 
       <footer className="mx-auto w-full max-w-6xl px-5 py-10">
         <p className="font-mono text-[11px] leading-relaxed text-muted-foreground">
