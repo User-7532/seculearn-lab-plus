@@ -28,7 +28,7 @@ export default function ClozeCard({ card, revealed, onToggle }) {
                     : 'mx-0.5 rounded bg-secondary px-7 shadow-[inset_0_-2px_0_hsl(var(--primary)/0.5)]'
                 }
               >
-                {revealed ? card.answer : ' '}
+                {revealed ? card.answer : '\u00a0'}
               </button>
             )}
           </span>
