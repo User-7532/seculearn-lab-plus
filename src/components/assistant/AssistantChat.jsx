@@ -6,6 +6,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { findLab } from '@/lib/labs';
 import AssistantPanel from '@/components/assistant/AssistantPanel';
 import useDragPosition from '@/hooks/use-drag-position';
+import { onAskSelection } from '@/lib/selection-ask';
 
 const PAGE_LABEL = {
   '/': 'ラボ一覧',
@@ -43,6 +44,7 @@ export default function AssistantChat() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [quote, setQuote] = useState('');
   const { pathname } = useLocation();
   const { toast } = useToast();
   const drag = useDragPosition();
