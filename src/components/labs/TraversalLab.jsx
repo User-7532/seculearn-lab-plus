@@ -1,11 +1,7 @@
 import { useState } from 'react';
 import LabShell from './LabShell';
 import { FileText, ShieldAlert } from 'lucide-react';
-
-const FILES = {
-  'welcome.txt': 'DocVault へようこそ。公開フォルダのファイルのみ表示できます。',
-  'guide.md': '# 使い方\nファイル名を入力すると内容が表示されます。',
-};
+import { BASE_DIR, SECRET_PATH, readRequested } from '@/lib/labs/vfs';
 
 export default function TraversalLab() {
   const [name, setName] = useState('');
@@ -14,19 +10,11 @@ export default function TraversalLab() {
   const open = (e) => {
     e.preventDefault();
     const raw = name.trim();
-    const path = `/srv/www/public/${raw}`;
-    const escaped = raw.includes('..') && /secret|etc/i.test(raw);
-
-    if (escaped) {
-      setResult({ state: 'escaped', path });
-      return;
-    }
-    if (FILES[raw]) {
-      setResult({ state: 'ok', path, content: FILES[raw] });
-      return;
-    }
-    setResult({ state: 'missing', path });
+    if (!raw) return;
+    setResult({ input: raw, ...readRequested(raw) });
   };
+
+  const outside = result && result.resolved && !result.resolved.startsWith(`${BASE_DIR}/`);
 
   return (
     <LabShell title="DocVault" host="docvault.sandbox.local/view?file=">
@@ -58,42 +46,40 @@ export default function TraversalLab() {
 
       {result && (
         <div className="mt-5 space-y-3">
-          <div className="rounded-lg border border-border bg-background/70 p-3">
-            <p className="mb-1 font-mono text-[9px] uppercase tracking-[0.16em] text-muted-foreground">
-              解決されたパス
-            </p>
-            <code className="block break-all font-mono text-[11px] text-accent">{result.path}</code>
+          <div className="space-y-2 rounded-lg border border-border bg-background/70 p-3">
+            <div>
+              <p className="mb-1 font-mono text-[9px] uppercase tracking-[0.16em] text-muted-foreground">
+                サーバーが組み立てたパス
+              </p>
+              <code className="block break-all font-mono text-[11px] text-accent">{result.joined || '—'}</code>
+            </div>
+            <div>
+              <p className="mb-1 font-mono text-[9px] uppercase tracking-[0.16em] text-muted-foreground">
+                実際に開いたパス（.. を解決したあと）
+              </p>
+              <code className="block break-all font-mono text-[11px] text-accent">{result.resolved || '—'}</code>
+            </div>
           </div>
 
-          {result.state === 'escaped' && (
-            <>
-              <div className="flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/10 p-3">
-                <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
-                <div>
-                  <p className="text-xs font-semibold text-destructive">公開ディレクトリの外に到達しました</p>
-                  <p className="mt-0.5 text-[11px] leading-relaxed text-foreground/80">
-                    入力をパスとして結合しているため、上位ディレクトリの機密ファイルが読み出せます。
-                  </p>
-                </div>
+          {result.status === 200 && outside && (
+            <div className="flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/10 p-3">
+              <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+              <div>
+                <p className="text-xs font-semibold text-destructive">公開ディレクトリの外に到達しました</p>
+                <p className="mt-0.5 text-[11px] leading-relaxed text-foreground/80">
+                  入力をそのままパスにつなげているため、{BASE_DIR} の外のファイルが読み出せています。
+                  {result.resolved !== SECRET_PATH && ' 設定ファイルの中身に、次に狙う場所の手がかりがあるかもしれません。'}
+                </p>
               </div>
-              <pre className="overflow-x-auto rounded-lg border border-border bg-background/80 p-3 font-mono text-[11px] leading-relaxed text-foreground/85">
-{`# /etc/app/secrets
-db_host=10.0.4.12
-db_user=vault_app
-db_password=REDACTED
-flag=FLAG{p4th_tr4v3rs4l_esc4p3}`}
-              </pre>
-            </>
+            </div>
           )}
 
-          {result.state === 'ok' && (
+          {result.status === 200 ? (
             <pre className="overflow-x-auto whitespace-pre-wrap rounded-lg border border-border bg-background/80 p-3 font-mono text-[11px] leading-relaxed text-foreground/85">
               {result.content}
             </pre>
-          )}
-
-          {result.state === 'missing' && (
-            <p className="font-mono text-[11px] text-muted-foreground">404: ファイルが見つかりません。</p>
+          ) : (
+            <p className="break-all font-mono text-[11px] text-muted-foreground">{result.message}</p>
           )}
         </div>
       )}

@@ -68,7 +68,7 @@ export const LABS = [
     hints: [
       'ファイル名は公開フォルダの中から探しているはずです。',
       '「..」は一つ上のディレクトリを意味します。',
-      '../../etc/app/secrets のような組み合わせを試してみましょう。',
+      '公開フォルダは /srv/www/public です。ルート（/）まで戻るには ../ をいくつ重ねればよいか数えて、/etc/app/secrets を目指しましょう。',
     ],
     flag: 'FLAG{p4th_tr4v3rs4l_esc4p3}',
   },
