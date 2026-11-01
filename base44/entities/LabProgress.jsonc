@@ -1,0 +1,42 @@
+{
+  "name": "LabProgress",
+  "type": "object",
+  "properties": {
+    "lab_slug": {
+      "type": "string",
+      "description": "\u6f14\u7fd2\u30e9\u30dc\u306e\u8b58\u5225\u5b50"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "in_progress",
+        "cleared"
+      ],
+      "default": "in_progress",
+      "description": "\u9032\u884c\u72b6\u6cc1"
+    },
+    "attempts": {
+      "type": "number",
+      "default": 0,
+      "description": "\u30d5\u30e9\u30b0\u63d0\u51fa\u56de\u6570"
+    },
+    "hints_used": {
+      "type": "number",
+      "default": 0,
+      "description": "\u958b\u3044\u305f\u30d2\u30f3\u30c8\u6570"
+    },
+    "xp": {
+      "type": "number",
+      "default": 0,
+      "description": "\u7372\u5f97XP"
+    },
+    "cleared_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u30af\u30ea\u30a2\u65e5\u6642"
+    }
+  },
+  "required": [
+    "lab_slug"
+  ]
+}
