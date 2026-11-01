@@ -24,7 +24,7 @@ export default function Layout() {
             <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-primary/40 bg-primary/10">
               <Terminal className="h-4 w-4 text-primary" />
             </span>
-            <span className="font-heading text-[15px] font-semibold tracking-tight">
+            <span className="hidden font-heading text-[15px] font-semibold tracking-tight sm:inline">
               NULL<span className="text-primary">LAB</span>
             </span>
           </Link>
