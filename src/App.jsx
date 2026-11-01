@@ -11,6 +11,9 @@ import Layout from '@/components/Layout';
 import Dashboard from '@/pages/Dashboard';
 import LabDetail from '@/pages/LabDetail';
 import ProgressPage from '@/pages/Progress';
+import Cards from '@/pages/Cards';
+import Review from '@/pages/Review';
+import Stats from '@/pages/Stats';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
@@ -53,6 +56,9 @@ const AuthenticatedApp = () => {
           <Route path="/" element={<Dashboard />} />
           <Route path="/lab/:slug" element={<LabDetail />} />
           <Route path="/progress" element={<ProgressPage />} />
+          <Route path="/cards" element={<Cards />} />
+          <Route path="/review" element={<Review />} />
+          <Route path="/stats" element={<Stats />} />
         </Route>
       </Route>
 
