@@ -7,6 +7,7 @@ import { findLab } from '@/lib/labs';
 import AssistantPanel from '@/components/assistant/AssistantPanel';
 import useDragPosition from '@/hooks/use-drag-position';
 import { onAskSelection } from '@/lib/selection-ask';
+import { importExternal, importReport } from '@/lib/external-import';
 
 const PAGE_LABEL = {
   '/': 'ラボ一覧',
@@ -45,6 +46,7 @@ export default function AssistantChat() {
   const [messages, setMessages] = useState(null);
   const [busy, setBusy] = useState(false);
   const [quote, setQuote] = useState('');
+  const [importing, setImporting] = useState(false);
   const { pathname } = useLocation();
   const { toast } = useToast();
   const drag = useDragPosition();
@@ -111,6 +113,31 @@ export default function AssistantChat() {
     }
   };
 
+  // 入力欄に貼った、ほかのAIとの会話を取り込む。結果は会話にも残す
+  const runImport = async (raw) => {
+    const text = String(raw || '').trim();
+    if (!text || busy) return;
+    const label = `ほかのAIとの会話を取り込む（${text.length.toLocaleString()}字）`;
+    setOpen(true);
+    setBusy(true);
+    setImporting(true);
+    setMessages((prev) => [...(prev || []), { id: `u-${Date.now()}`, role: 'user', content: label }]);
+    try {
+      const result = await importExternal(text);
+      const report = importReport(result);
+      setMessages((prev) => [...(prev || []), { id: `a-${Date.now()}`, role: 'assistant', content: report }]);
+      base44.entities.AssistantMessage.bulkCreate([
+        { role: 'user', content: label },
+        { role: 'assistant', content: report },
+      ]).catch(() => {});
+    } catch (e) {
+      toast({ title: '取り込めませんでした', description: e.message, variant: 'destructive' });
+    } finally {
+      setBusy(false);
+      setImporting(false);
+    }
+  };
+
   return (
     <div className="pointer-events-none fixed bottom-4 right-3 z-50 flex flex-col items-end gap-2 lg:bottom-6 lg:right-6">
       {open && (
@@ -123,6 +150,8 @@ export default function AssistantChat() {
             messages={messages}
             busy={busy}
             onSend={send}
+            onImport={runImport}
+            importing={importing}
             onClose={() => setOpen(false)}
             onLoadFrom={loadFrom}
             quote={quote}

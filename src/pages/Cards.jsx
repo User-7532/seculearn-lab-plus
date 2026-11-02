@@ -7,6 +7,8 @@ import { recordKnowledgeAnswer } from '@/lib/knowledge';
 import { cn } from '@/lib/utils';
 import ClozeCard from '@/components/knowledge/ClozeCard';
 import WrittenCard from '@/components/knowledge/WrittenCard';
+import ExternalImport from '@/components/ExternalImport';
+import { useToast } from '@/components/ui/use-toast';
 
 const shuffle = (list) => {
   const a = [...list];
@@ -45,6 +47,7 @@ export default function Cards() {
   const [tally, setTally] = useState({ correct: 0, wrong: 0 });
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState('');
+  const { toast } = useToast();
   const autoTried = useRef(new Set());
 
   useEffect(() => {
@@ -143,6 +146,28 @@ export default function Cards() {
       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
         ラボで手を動かした脆弱性の仕組みと対策を、穴埋めと記述で確かめます。間違えたカードは復習に回ります。
       </p>
+
+      <ExternalImport
+        onDone={(result) => {
+          // 取り込んだカードを、そのまま続けて解けるようにする
+          setCards((prev) => [...result.cards, ...(prev || [])]);
+          if (result.cards.length) {
+            setDeck(shuffle(result.cards));
+            setIdx(0);
+            setRevealed(false);
+            setNote('');
+          }
+          toast({
+            title: result.cards.length ? `知識カードを${result.cards.length}枚作りました` : '会話の要点を覚えました',
+            description: [
+              result.scheduled ? `今日の復習に${result.scheduled}枚` : '',
+              result.memoryUpdated ? 'アシスタントの記憶を更新' : '',
+            ]
+              .filter(Boolean)
+              .join('・'),
+          });
+        }}
+      />
 
       <div className="mt-8 flex flex-wrap gap-1.5">
         <Chip active={topic === 'all'} onClick={() => chooseTopic('all')}>
