@@ -15,7 +15,8 @@ export default async function (req) {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json().catch(() => ({}));
-    const message = String(body.message || '').trim().slice(0, 1000);
+    // 長い文章をそのまま貼って相談できるようにする（過去の発言は短く切って使う）
+    const message = String(body.message || '').trim().slice(0, 60000);
     const page = String(body.page || '').slice(0, 60);
     const path = String(body.path || '').slice(0, 120);
     // 画面の抜粋からフラグの文字列は取り除いて渡す（答えをそのまま言わせないため）
@@ -33,12 +34,15 @@ export default async function (req) {
 
     const today = new Date().toISOString().slice(0, 10);
 
-    const [history, progress, attempts, reviews] = await Promise.all([
+    const [history, progress, attempts, reviews, memories] = await Promise.all([
       base44.entities.AssistantMessage.filter({}, { sort: '-created_date', limit: 12 }),
       base44.entities.LabProgress.filter({}, { limit: 20 }),
       base44.entities.KnowledgeAttempt.filter({}, { sort: '-created_date', limit: 200 }),
       base44.entities.ReviewItem.filter({}, { sort: 'due_date', limit: 200 }),
+      base44.entities.AssistantMemory.list({ sort: '-updated_date', limit: 1 }).catch(() => ({ items: [] })),
     ]);
+    // ほかのAIとの会話などから覚えた、本人についての要点
+    const memorySummary = String((memories.items || [])[0]?.summary || '').trim();
 
     const labLine =
       Object.entries(LAB_TITLES)
@@ -84,6 +88,9 @@ export default async function (req) {
 【いま見ている画面】${page || '不明'}${path ? `（${path}）` : ''}
 【画面に表示されている内容（抜粋）】
 ${pageContext || '（取得できませんでした）'}
+
+【これまでに分かっている本人のこと（ほかのAIとの会話などから。参考情報で、今回の発言や記録と食い違うときはそちらを優先する）】
+${memorySummary || '（まだありません）'}
 
 【ラボの進み具合】
 ${labLine}
