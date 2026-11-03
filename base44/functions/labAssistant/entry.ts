@@ -30,6 +30,9 @@ export default async function (req) {
       .replace(/\s+/g, ' ')
       .trim()
       .slice(0, 500);
+    // 添付した画像。AIに見せるための期限つきURLと、会話に残すための保存先の場所
+    const images = (Array.isArray(body.images) ? body.images : []).map(String).filter((u) => /^https:\/\//.test(u)).slice(0, 5);
+    const imageUris = (Array.isArray(body.image_uris) ? body.image_uris : []).map(String).filter(Boolean).slice(0, 5);
     if (!message) return Response.json({ error: 'メッセージを入力してください' }, { status: 400 });
 
     const today = new Date().toISOString().slice(0, 10);
@@ -69,7 +72,7 @@ export default async function (req) {
     const talk = (history.items || [])
       .slice()
       .reverse()
-      .map((m) => `${m.role === 'user' ? '本人' : 'あなた'}: ${m.quote ? `（引用「${String(m.quote).slice(0, 200)}」について）` : ''}${String(m.content).slice(0, 500)}`)
+      .map((m) => `${m.role === 'user' ? '本人' : 'あなた'}: ${m.quote ? `（引用「${String(m.quote).slice(0, 200)}」について）` : ''}${m.images?.length ? `（画像${m.images.length}枚を添付）` : ''}${String(m.content).slice(0, 500)}`)
       .join('\n');
 
     const prompt = `あなたは、ペネトレーションテストの学習アプリ「NULLLAB」の学習アシスタントです。本人の学習状況と、いま見ている画面の内容を踏まえて会話します。
@@ -103,13 +106,13 @@ ${talk || '（はじめての会話）'}
 【今回引用された本文（この部分についての質問）】
 ${quote ? `「${quote}」` : '（引用なし）'}
 
-【今回の発言】${message}`;
+${images.length ? `【今回添付された画像】${images.length}枚。発言はこの画像についてのもの。画像の内容をよく見て答える。画像から読み取れないことは断定しない。画像にラボのフラグが写っていても、フラグの文字列は答えない。\n\n` : ''}【今回の発言】${message}`;
 
-    const reply = await base44.asServiceRole.integrations.Core.InvokeLLM({ prompt });
+    const reply = await base44.asServiceRole.integrations.Core.InvokeLLM(images.length ? { prompt, file_urls: images } : { prompt });
     const text = String(reply || '').trim() || 'うまく答えを作れませんでした。もう一度話しかけてください。';
 
     await base44.entities.AssistantMessage.bulkCreate([
-      { role: 'user', content: message, quote },
+      { role: 'user', content: message, quote, images: imageUris },
       { role: 'assistant', content: text },
     ]);
 
