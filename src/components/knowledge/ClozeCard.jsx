@@ -1,4 +1,5 @@
 import { topicLabel } from '@/lib/topics';
+import { revealsAnswer } from '@/lib/answer-guard';
 
 // 穴埋めカード。隠しているあいだは答えの文字を画面に置かない（切り替え時に一瞬見えるのを防ぐ）
 export default function ClozeCard({ card, revealed, onToggle }) {
@@ -8,7 +9,8 @@ export default function ClozeCard({ card, revealed, onToggle }) {
     <div className="rounded-2xl border border-border bg-card p-6">
       <div className="flex flex-wrap items-center gap-2">
         <span className="rounded-full border border-border px-2 py-0.5 font-mono text-[10px] text-muted-foreground">
-          {topicLabel(card.topic)}
+          {/* 分野名が答えそのもの（例: 答えが「SQLインジェクション」）のときは、答えを見るまで伏せる */}
+          {!revealed && revealsAnswer(topicLabel(card.topic), card) ? 'セキュリティ' : topicLabel(card.topic)}
         </span>
         <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70">cloze</span>
       </div>

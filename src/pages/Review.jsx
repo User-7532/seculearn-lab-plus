@@ -4,6 +4,7 @@ import { ArrowRight, Check, Loader2, RotateCcw, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { findLab } from '@/lib/labs';
 import { topicLabel } from '@/lib/topics';
+import { questionPreview } from '@/lib/answer-guard';
 import { todayISO } from '@/lib/srs';
 import { recordKnowledgeAnswer } from '@/lib/knowledge';
 import ClozeCard from '@/components/knowledge/ClozeCard';
@@ -202,7 +203,10 @@ export default function Review() {
                       <span className="mr-2 font-mono text-[10px] text-muted-foreground">
                         {r.item_type === 'lab' ? 'LAB' : 'CARD'}
                       </span>
-                      {r.item_type === 'lab' ? findLab(r.item_id)?.title || r.title : r.title || topicLabel(r.topic)}
+                      {/* カードは答えが題名になっていることがあるので、答えを伏せた問題文を出す */}
+                      {r.item_type === 'lab'
+                        ? findLab(r.item_id)?.title || r.title
+                        : questionPreview(cardsById.get(r.item_id)) || topicLabel(r.topic)}
                     </span>
                     <span className="shrink-0 font-mono text-[10px] text-muted-foreground">{dayLabel(r.due_date)}</span>
                   </div>

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Check, Loader2, SkipForward, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { topicLabel } from '@/lib/topics';
+import { revealsAnswer } from '@/lib/answer-guard';
 
 // 記述カード。解答はAIが判定し、模範解答と解説をあとから見せる
 export default function WrittenCard({ card, onResult, onSkip }) {
@@ -32,7 +33,7 @@ export default function WrittenCard({ card, onResult, onSkip }) {
     <div className="rounded-2xl border border-border bg-card p-6">
       <div className="flex items-center gap-2">
         <span className="rounded-full border border-border px-2 py-0.5 font-mono text-[10px] text-muted-foreground">
-          {topicLabel(card.topic)}
+          {!verdict && revealsAnswer(topicLabel(card.topic), card) ? 'セキュリティ' : topicLabel(card.topic)}
         </span>
         <span className="rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 font-mono text-[10px] text-accent">
           記述
