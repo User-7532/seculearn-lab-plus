@@ -5,6 +5,13 @@
       "description": "\u767a\u8a00\u5185\u5bb9",
       "type": "string"
     },
+    "images": {
+      "description": "\u6dfb\u4ed8\u3057\u305f\u753b\u50cf\u306e\u4fdd\u5b58\u5148\uff08\u672c\u4eba\u3060\u3051\u304c\u898b\u3089\u308c\u308b\u4fdd\u5b58\u5148\u306e\u5834\u6240\uff09",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
     "quote": {
       "description": "\u753b\u9762\u3067\u9078\u3093\u3067\u8cea\u554f\u3057\u305f\u6587\u7ae0\uff08\u5f15\u7528\uff09",
       "type": "string"
