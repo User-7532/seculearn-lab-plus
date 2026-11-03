@@ -163,8 +163,8 @@ ${text}`,
           cards.map((c) => ({
             item_type: 'card',
             item_id: c.id,
-            // 解いたときに付く題名（src/lib/knowledge.js）と同じ決め方にする
-            title: c.kind === 'written' ? String(c.text || '').slice(0, 40) : c.answer,
+            // 解いたときに付く題名（src/lib/knowledge.js）と同じく、答えを伏せた問題文にする
+            title: String(c.text || '').replace(/___/g, '＿＿＿').replace(/\s+/g, ' ').trim().slice(0, 40),
             topic: c.topic,
             due_date: due,
             interval_days: 0,
