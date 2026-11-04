@@ -7,6 +7,7 @@ import { topicLabel } from '@/lib/topics';
 import { questionPreview } from '@/lib/answer-guard';
 import { todayISO } from '@/lib/srs';
 import { recordKnowledgeAnswer } from '@/lib/knowledge';
+import { refineCards, refineOldCardsInBackground } from '@/lib/refine-written';
 import ClozeCard from '@/components/knowledge/ClozeCard';
 import WrittenCard from '@/components/knowledge/WrittenCard';
 
@@ -31,8 +32,20 @@ export default function Review() {
         const ids = list.filter((r) => r.item_type === 'card').map((r) => r.item_id);
         if (ids.length) {
           const cards = await base44.entities.KnowledgeCard.filter({ id: { $in: ids } }, { limit: 300 });
-          setCardsById(new Map((cards.items || []).map((c) => [c.id, c])));
+          const map = new Map((cards.items || []).map((c) => [c.id, c]));
+          setCardsById(map);
+          // 今日の復習に出る記述問題は、始める前に聞き方を見直す
+          const dueIds = new Set(list.filter((r) => r.item_type === 'card' && r.due_date <= todayISO()).map((r) => r.item_id));
+          const fixed = await refineCards([...map.values()].filter((c) => dueIds.has(c.id)));
+          if (fixed.length) {
+            setCardsById((prev) => {
+              const next = new Map(prev);
+              fixed.forEach((c) => next.set(c.id, c));
+              return next;
+            });
+          }
         }
+        refineOldCardsInBackground();
       })
       .catch(() => setItems([]));
   }, []);
