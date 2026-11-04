@@ -4,6 +4,7 @@ import { Check, Loader2, Plus, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { TOPICS } from '@/lib/topics';
 import { recordKnowledgeAnswer } from '@/lib/knowledge';
+import { needsRefine, refineCards, refineOldCardsInBackground } from '@/lib/refine-written';
 import { cn } from '@/lib/utils';
 import ClozeCard from '@/components/knowledge/ClozeCard';
 import WrittenCard from '@/components/knowledge/WrittenCard';
@@ -51,6 +52,7 @@ export default function Cards() {
   const autoTried = useRef(new Set());
 
   useEffect(() => {
+    refineOldCardsInBackground();
     base44.entities.KnowledgeCard.list({ sort: '-created_date', limit: 500 })
       .then((page) => setCards(page.items || []))
       .catch(() => setCards([]));
@@ -118,6 +120,24 @@ export default function Cards() {
   }, [cards === null, topic, wrongOnly]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const current = deck[idx] || null;
+  const currentRef = useRef(null);
+  currentRef.current = current;
+  const refining = useRef(new Set());
+
+  // 山札に入った記述問題のうち、聞き方をまだ見直していないものを先に直す
+  useEffect(() => {
+    const todo = deck.filter((c) => needsRefine(c) && !refining.current.has(c.id));
+    if (!todo.length) return;
+    todo.forEach((c) => refining.current.add(c.id));
+    refineCards(todo).then((fixed) => {
+      if (!fixed.length) return;
+      const byId = new Map(fixed.map((c) => [c.id, c]));
+      // 解いている最中の問題は入れ替えない（次に開いたときに直った問いが出る）
+      const keep = (c) => (byId.has(c.id) && currentRef.current?.id !== c.id ? byId.get(c.id) : c);
+      setDeck((prev) => prev.map(keep));
+      setCards((prev) => (prev || []).map(keep));
+    });
+  }, [deck]);
 
   const advance = () => {
     setRevealed(false);
