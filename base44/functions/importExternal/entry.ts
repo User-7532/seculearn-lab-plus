@@ -25,6 +25,8 @@ const CARD_SCHEMA = {
           model_answer: { type: 'string' },
           // 解答者が自分で答えるべき語句。問題文に出ていないかの確認に使う（保存はしない）
           target_terms: { type: 'array', items: { type: 'string' } },
+          // 記述で、問いが求めている要素（採点の観点）
+          expected_points: { type: 'array', items: { type: 'string' } },
           explanation: { type: 'string' },
           difficulty: { type: 'string', enum: ['basic', 'intermediate', 'advanced'] },
         },
@@ -100,6 +102,8 @@ ${Object.entries(TOPICS).map(([id, label]) => `- ${id}: ${label}`).join('\n')}
 - kind は "cloze"（空所補充）か "written"（記述）。語句1つで答えられる知識は cloze、仕組み・理由・対策の説明が必要な知識は written にする。
 - cloze の text は1〜2文で、空所を ___（半角アンダースコア3つ）で1か所だけ表す。answer には空所の語句を短く入れる。
 - written の text は答えを含まない問い。model_answer に2〜4文の模範解答、answer に要点を10〜20字で入れる。
+- written の問いは、何を答えれば正解かが解答者に分かる聞き方にする。「どのような対策があるか」だけの、正しい答えが何通りもある問いにしない。求める観点・数・場面を問いに書く（例:「この脆弱性への根本的な対策を、1つはアプリのコードの修正として、1つは被害を小さくする設定として挙げよ」）。観点を書いても、答えそのものの語句は問いに書かない。
+- written の expected_points には、問いが求めている要素を問いの観点・数に合わせて1〜4個、問いの条件として書く（例:「コードの修正による対策を1つ」）。cloze では空の配列。
 - 問題文に答えを書かない。空所の語句、答えさせたい名前・略称・正式名称、その一部や英語表記・括弧書きの補足も、問題文には入れない。
 - target_terms には、解答者が自分で答えるべき語句をすべて入れる。
 - 守る側の視点で書く。実在のサービスを攻撃する手順や、検知を回避する方法は扱わない。
@@ -145,6 +149,11 @@ ${text}`,
         text: qtext,
         answer: String(c?.answer || '').slice(0, 200),
         model_answer: kind === 'written' ? String(c?.model_answer || '').slice(0, 800) : '',
+        expected_points:
+          kind === 'written' && Array.isArray(c?.expected_points)
+            ? c.expected_points.map((p) => String(p).trim().slice(0, 120)).filter(Boolean).slice(0, 4)
+            : [],
+        refined: kind === 'written',
         explanation: String(c?.explanation || '').slice(0, 600),
         difficulty: ['basic', 'intermediate', 'advanced'].includes(c?.difficulty) ? c.difficulty : 'basic',
         source: 'import',
