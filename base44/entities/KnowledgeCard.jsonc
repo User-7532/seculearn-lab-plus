@@ -2,7 +2,7 @@
   "name": "KnowledgeCard",
   "properties": {
     "answer": {
-      "description": "空所に入る語句（記述では要点）",
+      "description": "\u7a7a\u6240\u306b\u5165\u308b\u8a9e\u53e5\uff08\u8a18\u8ff0\u3067\u306f\u8981\u70b9\uff09",
       "type": "string"
     },
     "difficulty": {
@@ -14,13 +14,20 @@
       ],
       "type": "string"
     },
+    "expected_points": {
+      "description": "\u8a18\u8ff0\u3067\u554f\u3044\u304c\u6c42\u3081\u3066\u3044\u308b\u8981\u7d20\uff08\u63a1\u70b9\u306e\u89b3\u70b9\uff09",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
     "explanation": {
-      "description": "解説",
+      "description": "\u89e3\u8aac",
       "type": "string"
     },
     "kind": {
       "default": "cloze",
-      "description": "cloze=穴埋め written=記述",
+      "description": "cloze=\u7a74\u57cb\u3081 written=\u8a18\u8ff0",
       "enum": [
         "cloze",
         "written"
@@ -28,24 +35,29 @@
       "type": "string"
     },
     "model_answer": {
-      "description": "記述の模範解答",
+      "description": "\u8a18\u8ff0\u306e\u6a21\u7bc4\u89e3\u7b54",
       "type": "string"
     },
-    "text": {
-      "description": "穴埋めの文章（空所は ___）または記述の問い",
-      "type": "string"
-    },
-    "topic": {
-      "description": "分野。ラボのslug（sql-injection など）か basics",
-      "type": "string"
+    "refined": {
+      "default": false,
+      "description": "\u8a18\u8ff0\u554f\u984c\u306e\u805e\u304d\u65b9\u3092\u898b\u76f4\u3057\u305f\u304b\uff08\u7b54\u3048\u306e\u7bc4\u56f2\u304c\u5b9a\u307e\u308b\u3088\u3046\u306b\u89b3\u70b9\u30fb\u6570\u3092\u8db3\u3057\u305f\u304b\u3069\u3046\u304b\uff09",
+      "type": "boolean"
     },
     "source": {
-      "type": "string",
+      "description": "ai=\u5206\u91ce\u3092\u9078\u3093\u3067AI\u304c\u4f5c\u6210 / import=\u307b\u304b\u306eAI\u3068\u306e\u4f1a\u8a71\u3092\u53d6\u308a\u8fbc\u3093\u3067\u4f5c\u6210",
       "enum": [
         "ai",
         "import"
       ],
-      "description": "ai=分野を選んでAIが作成 / import=ほかのAIとの会話を取り込んで作成"
+      "type": "string"
+    },
+    "text": {
+      "description": "\u7a74\u57cb\u3081\u306e\u6587\u7ae0\uff08\u7a7a\u6240\u306f ___\uff09\u307e\u305f\u306f\u8a18\u8ff0\u306e\u554f\u3044",
+      "type": "string"
+    },
+    "topic": {
+      "description": "\u5206\u91ce\u3002\u30e9\u30dc\u306eslug\uff08sql-injection \u306a\u3069\uff09\u304b basics",
+      "type": "string"
     }
   },
   "required": [
@@ -53,6 +65,7 @@
     "text",
     "answer"
   ],
+  "type": "object",
   "rls": {
     "create": {
       "created_by_id": "{{user.id}}"
@@ -66,6 +79,5 @@
     "update": {
       "created_by_id": "{{user.id}}"
     }
-  },
-  "type": "object"
+  }
 }
